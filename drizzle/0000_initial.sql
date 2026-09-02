@@ -1,0 +1,27 @@
+CREATE TYPE "public"."user_status" AS ENUM('active', 'inactive', 'suspended', 'blocked', 'deleted');--> statement-breakpoint
+CREATE TABLE "users" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"school_id" uuid NOT NULL,
+	"first_name" text NOT NULL,
+	"middle_name" text NOT NULL,
+	"last_name" text NOT NULL,
+	"full_name" text NOT NULL,
+	"email" text NOT NULL,
+	"hash_password" text NOT NULL,
+	"phone" text,
+	"is_email_verified" boolean DEFAULT false NOT NULL,
+	"email_verified_at" timestamp with time zone,
+	"is_phone_verified" boolean DEFAULT false NOT NULL,
+	"phone_verified_at" timestamp with time zone,
+	"gender" text,
+	"dob" date,
+	"avatar" text,
+	"last_login_at" timestamp with time zone,
+	"last_login_ip" varchar(45),
+	"failed_login_attempts" integer DEFAULT 0 NOT NULL,
+	"locked_until" timestamp with time zone,
+	"status" "user_status" DEFAULT 'active' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "users_email_unique" UNIQUE("email")
+);
