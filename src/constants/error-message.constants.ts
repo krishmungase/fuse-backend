@@ -10,7 +10,6 @@ const ERROR_MESSAGE = {
   INVALID_CREDENTIALS: "Invalid email or password",
   USER_NOT_FOUND: "User not found",
   USER_ALREADY_EXISTS: "User with this email already exists",
-  ACCOUNT_LOCKED: "Account is locked. Try again later.",
   ACCOUNT_INACTIVE: "Account is not active",
 
   // Email verification flow

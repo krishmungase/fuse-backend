@@ -28,9 +28,6 @@ import {
   IVerifyEmailBody,
 } from "../types/user.types";
 
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCK_DURATION_MINUTES = 15;
-
 const CHECK_INBOX_MESSAGE =
   "If that email can be registered, a verification link is on its way.";
 
@@ -225,35 +222,14 @@ class AuthController {
       throw new ApiError(403, ERROR_MESSAGE.ACCOUNT_INACTIVE);
     }
 
-    if (user.lockedUntil && user.lockedUntil > new Date()) {
-      throw new ApiError(423, ERROR_MESSAGE.ACCOUNT_LOCKED);
-    }
-
     const isMatch = await this.hashService.hashCompare(
       password,
       user.hashPassword,
     );
 
     if (!isMatch) {
-      const attempts = user.failedLoginAttempts + 1;
-      const shouldLock = attempts >= MAX_FAILED_ATTEMPTS;
-
-      await this.userService.updateUser(user.id, {
-        failedLoginAttempts: attempts,
-        lockedUntil: shouldLock
-          ? new Date(Date.now() + LOCK_DURATION_MINUTES * 60 * 1000)
-          : null,
-      });
-
       throw new ApiError(401, ERROR_MESSAGE.INVALID_CREDENTIALS);
     }
-
-    const updated = await this.userService.updateUser(user.id, {
-      failedLoginAttempts: 0,
-      lockedUntil: null,
-      lastLoginAt: new Date(),
-      lastLoginIp: req.ip ?? null,
-    });
 
     const accessToken = await this.tokenService.signAccessToken({
       user: { id: user.id },
@@ -271,7 +247,7 @@ class AuthController {
       new ApiResponse(
         200,
         {
-          user: toSafeUser(updated),
+          user: toSafeUser(user),
           accessToken,
           refreshToken,
         },

@@ -98,10 +98,6 @@ export const changePasswordValidator = [
 
 export const updateProfileValidator = [
   body("name").optional().isString().trim().notEmpty().isLength({ max: 100 }),
-  body("phone")
-    .optional({ nullable: true, values: "falsy" })
-    .isString()
-    .isLength({ max: 20 }),
   body("gender")
     .optional({ nullable: true, values: "falsy" })
     .isIn(GENDERS)

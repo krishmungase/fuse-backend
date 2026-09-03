@@ -41,7 +41,6 @@ export interface IChangePasswordBody {
 
 export interface IUpdateProfileBody {
   name?: string;
-  phone?: string;
   gender?: string;
   dob?: string;
   avatar?: string;

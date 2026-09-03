@@ -10,8 +10,6 @@ import {
   boolean,
   timestamp,
   date,
-  integer,
-  varchar,
   pgEnum,
 } from "drizzle-orm/pg-core";
 
@@ -41,22 +39,13 @@ export const users = pgTable("users", {
   // Null between registration and the set-password step. Every read path must
   // treat a null hash as "cannot authenticate" rather than assume a string.
   hashPassword: text("hash_password"),
-  phone: text("phone"),
 
   isEmailVerified: boolean("is_email_verified").notNull().default(false),
   emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
 
-  isPhoneVerified: boolean("is_phone_verified").notNull().default(false),
-  phoneVerifiedAt: timestamp("phone_verified_at", { withTimezone: true }),
-
   gender: text("gender"),
   dob: date("dob"),
   avatar: text("avatar"),
-
-  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
-  lastLoginIp: varchar("last_login_ip", { length: 45 }),
-  failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
-  lockedUntil: timestamp("locked_until", { withTimezone: true }),
 
   // Defaults to `pending` so no code path can mint a login-capable account
   // without explicitly going through email verification.
