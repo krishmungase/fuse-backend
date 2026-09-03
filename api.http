@@ -1,3 +1,0 @@
-POST http://localhost:3000/api/v1/chat
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiMWFkYTE3NTEtNTY3YS00MGMyLWFjMTItMzAxZmYzNmQ4NWU3In0sImlhdCI6MTc4ODQyMzgwNCwiZXhwIjoxNzg4NDI0NzA0fQ.ZRUI-y5g2V6IeBqNnOdvWBa-A9uo9gIKX8E7pnFDN-w
