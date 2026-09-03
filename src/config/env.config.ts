@@ -92,6 +92,8 @@ const env: EnvConfig = {
     fromEmail: getRequired("SMTP_FROM_EMAIL"),
   },
 
+  openai: getRequired("OPENAI_API_KEY"),
+
   rabbitmqUrl: useRabbitMQ
     ? getRequired("RABBITMQ_URL")
     : getOptional("RABBITMQ_URL"),

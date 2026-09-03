@@ -56,4 +56,5 @@ export interface EnvConfig {
   rabbitmqUrl: string;
   frontendUrl: string;
   resendCooldownSeconds: number;
+  openai: string;
 }
