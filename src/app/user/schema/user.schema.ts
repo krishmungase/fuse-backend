@@ -10,12 +10,11 @@ import {
   boolean,
   timestamp,
   date,
-  integer,
-  varchar,
   pgEnum,
 } from "drizzle-orm/pg-core";
 
 export const USER_STATUSES = [
+  "pending",
   "active",
   "inactive",
   "suspended",
@@ -33,33 +32,24 @@ export const userStatusEnum = pgEnum(
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
 
-  schoolId: uuid("school_id").notNull(),
-
-  firstName: text("first_name").notNull(),
-  middleName: text("middle_name").notNull(),
-  lastName: text("last_name").notNull(),
-  fullName: text("full_name").notNull(),
+  name: text("name").notNull(),
 
   email: text("email").notNull().unique(),
-  hashPassword: text("hash_password").notNull(),
-  phone: text("phone"),
+
+  // Null between registration and the set-password step. Every read path must
+  // treat a null hash as "cannot authenticate" rather than assume a string.
+  hashPassword: text("hash_password"),
 
   isEmailVerified: boolean("is_email_verified").notNull().default(false),
   emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
-
-  isPhoneVerified: boolean("is_phone_verified").notNull().default(false),
-  phoneVerifiedAt: timestamp("phone_verified_at", { withTimezone: true }),
 
   gender: text("gender"),
   dob: date("dob"),
   avatar: text("avatar"),
 
-  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
-  lastLoginIp: varchar("last_login_ip", { length: 45 }),
-  failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
-  lockedUntil: timestamp("locked_until", { withTimezone: true }),
-
-  status: userStatusEnum("status").notNull().default("active"),
+  // Defaults to `pending` so no code path can mint a login-capable account
+  // without explicitly going through email verification.
+  status: userStatusEnum("status").notNull().default("pending"),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

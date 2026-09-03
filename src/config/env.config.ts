@@ -1,7 +1,8 @@
 /**
  * Environment configuration: loads the correct .env file based on NODE_ENV
- * and exposes a typed, validated config object (app, db, jwt, frontendUrl).
- * Throws at startup if any required variable is missing.
+ * and exposes a typed, validated config object (app, db, jwt, smtp,
+ * rabbitmqUrl, frontendUrl). Throws at startup if any required variable is
+ * missing.
  */
 import path from "path";
 import dotenv from "dotenv";
@@ -39,6 +40,16 @@ const getNumber = (key: string, fallback: number): number => {
   return isNaN(parsed) ? fallback : parsed;
 };
 
+const getBoolean = (key: string, fallback: boolean): boolean => {
+  const value = process.env[key];
+  if (value === undefined || value === "") return fallback;
+  return ["true", "1", "yes"].includes(value.trim().toLowerCase());
+};
+
+// Feature flag: disable RabbitMQ and send verification emails inline, for
+// hosts that can't run the always-on consumer.
+const useRabbitMQ = getBoolean("USE_RABBITMQ_SERVICE", true);
+
 const env: EnvConfig = {
   app: {
     nodeEnv,
@@ -47,6 +58,7 @@ const env: EnvConfig = {
     isDev: nodeEnv === "development",
     isProd: nodeEnv === "production",
     isTest: nodeEnv === "test",
+    useRabbitMQ,
   },
 
   db: {
@@ -65,9 +77,29 @@ const env: EnvConfig = {
     refreshSecret: getRequired("JWT_REFRESH_SECRET"),
     accessExpiresIn: getOptional("JWT_ACCESS_EXPIRES_IN", "15m"),
     refreshExpiresIn: getOptional("JWT_REFRESH_EXPIRES_IN", "7d"),
+
+    emailSecret: getRequired("JWT_EMAIL_SECRET"),
+    emailVerifyExpiresIn: getOptional("JWT_EMAIL_VERIFY_EXPIRES_IN", "30m"),
+    passwordSetupExpiresIn: getOptional("JWT_PASSWORD_SETUP_EXPIRES_IN", "15m"),
   },
 
+  smtp: {
+    host: getRequired("SMTP_HOST"),
+    port: getNumber("SMTP_PORT", 587),
+    user: getRequired("SMTP_USER"),
+    password: getRequired("SMTP_PASSWORD"),
+    fromName: getOptional("SMTP_FROM_NAME", "Fuse AI"),
+    fromEmail: getRequired("SMTP_FROM_EMAIL"),
+  },
+
+  rabbitmqUrl: useRabbitMQ
+    ? getRequired("RABBITMQ_URL")
+    : getOptional("RABBITMQ_URL"),
+
   frontendUrl: getOptional("FRONTEND_URL", "http://localhost:5173"),
+
+  // Minimum gap between verification emails for the same address.
+  resendCooldownSeconds: getNumber("MAIL_RESEND_COOLDOWN_SECONDS", 60),
 };
 
 export default env;

@@ -1,6 +1,6 @@
 {
-  "id": "07f20ab0-e273-4d9b-aea3-2ab4d9a9ecb3",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "0a2aa220-0e3e-4efe-bb1d-712f89b05949",
+  "prevId": "07f20ab0-e273-4d9b-aea3-2ab4d9a9ecb3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -135,12 +135,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "phone": {
-          "name": "phone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "is_email_verified": {
           "name": "is_email_verified",
           "type": "boolean",
@@ -150,19 +144,6 @@
         },
         "email_verified_at": {
           "name": "email_verified_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "is_phone_verified": {
-          "name": "is_phone_verified",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "phone_verified_at": {
-          "name": "phone_verified_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -182,31 +163,6 @@
         "avatar": {
           "name": "avatar",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_login_at": {
-          "name": "last_login_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_login_ip": {
-          "name": "last_login_ip",
-          "type": "varchar(45)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "failed_login_attempts": {
-          "name": "failed_login_attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "locked_until": {
-          "name": "locked_until",
-          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },
