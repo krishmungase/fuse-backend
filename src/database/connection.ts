@@ -9,8 +9,9 @@ import { Pool } from "pg";
 import env from "../config/env.config";
 import logger from "../logger/winston.logger";
 import { users } from "../app/user/schema/user.schema";
+import { authTokens } from "../app/user/schema/auth-token.schema";
 
-const schema = { users };
+const schema = { users, authTokens };
 
 const pool = new Pool({
   host: env.db.host,

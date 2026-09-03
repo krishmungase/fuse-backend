@@ -1,22 +1,28 @@
 /**
  * User module type contracts: SafeUser (User without hashPassword) plus
- * the request body interfaces consumed by the user controller endpoints.
+ * the request body interfaces consumed by the auth and user controllers.
  */
 import { User, UserStatus } from "../schema/user.schema";
 
 export type SafeUser = Omit<User, "hashPassword">;
 
 export interface IRegisterBody {
-  schoolId: string;
-  firstName: string;
-  middleName: string;
-  lastName: string;
+  name: string;
   email: string;
+}
+
+export interface IResendVerificationBody {
+  email: string;
+}
+
+export interface IVerifyEmailBody {
+  token: string;
+}
+
+export interface ISetPasswordBody {
+  setupToken: string;
   password: string;
-  phone?: string;
-  gender?: string;
-  dob?: string;
-  avatar?: string;
+  confirmPassword: string;
 }
 
 export interface ILoginBody {
@@ -34,9 +40,7 @@ export interface IChangePasswordBody {
 }
 
 export interface IUpdateProfileBody {
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
+  name?: string;
   phone?: string;
   gender?: string;
   dob?: string;

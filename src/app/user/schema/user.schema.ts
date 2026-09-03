@@ -16,6 +16,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const USER_STATUSES = [
+  "pending",
   "active",
   "inactive",
   "suspended",
@@ -33,15 +34,13 @@ export const userStatusEnum = pgEnum(
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
 
-  schoolId: uuid("school_id").notNull(),
-
-  firstName: text("first_name").notNull(),
-  middleName: text("middle_name").notNull(),
-  lastName: text("last_name").notNull(),
-  fullName: text("full_name").notNull(),
+  name: text("name").notNull(),
 
   email: text("email").notNull().unique(),
-  hashPassword: text("hash_password").notNull(),
+
+  // Null between registration and the set-password step. Every read path must
+  // treat a null hash as "cannot authenticate" rather than assume a string.
+  hashPassword: text("hash_password"),
   phone: text("phone"),
 
   isEmailVerified: boolean("is_email_verified").notNull().default(false),
@@ -59,7 +58,9 @@ export const users = pgTable("users", {
   failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
   lockedUntil: timestamp("locked_until", { withTimezone: true }),
 
-  status: userStatusEnum("status").notNull().default("active"),
+  // Defaults to `pending` so no code path can mint a login-capable account
+  // without explicitly going through email verification.
+  status: userStatusEnum("status").notNull().default("pending"),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
