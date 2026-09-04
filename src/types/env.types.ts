@@ -48,6 +48,16 @@ export interface SmtpConfig {
   fromEmail: string;
 }
 
+/**
+ * API keys per LLM provider. Both are optional so the app boots with only
+ * the providers you actually use configured; the model factory raises a
+ * clear error if a request selects a provider whose key is missing.
+ */
+export interface LlmConfig {
+  groqApiKey: string;
+  openaiApiKey: string;
+}
+
 export interface EnvConfig {
   app: AppConfig;
   db: DatabaseConfig;
@@ -56,5 +66,5 @@ export interface EnvConfig {
   rabbitmqUrl: string;
   frontendUrl: string;
   resendCooldownSeconds: number;
-  openai: string;
+  llm: LlmConfig;
 }

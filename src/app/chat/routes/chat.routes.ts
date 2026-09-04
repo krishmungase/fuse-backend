@@ -17,6 +17,12 @@ const chatRouter = (): Router => {
 
   const chatController = new ChatController(userService, logger);
 
+  chatRouter.get(
+    "/models",
+    verifyJWT,
+    asyncHandler((req, res) => chatController.listModels(req, res)),
+  );
+
   chatRouter.post(
     "/",
     verifyJWT,
