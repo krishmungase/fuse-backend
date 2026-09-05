@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 export const sendMessageValidator = [
   body("message")
@@ -18,4 +18,9 @@ export const sendMessageValidator = [
     .trim()
     .notEmpty()
     .withMessage("model cannot be empty"),
+  body("chatId").optional().isUUID().withMessage("chatId must be a valid id"),
+];
+
+export const chatIdValidator = [
+  param("id").isUUID().withMessage("Invalid chat id"),
 ];

@@ -21,6 +21,7 @@ const ERROR_MESSAGE = {
   PASSWORD_MISMATCH: "Password and confirm password do not match",
   PASSWORD_ALREADY_SET: "A password has already been set for this account",
   // Chat
+  CHAT_NOT_FOUND: "Chat not found",
   CHAT_MODEL_NOT_FOUND: "The selected model is not available",
   NO_CHAT_MODEL_CONFIGURED: "No chat model is configured",
 
