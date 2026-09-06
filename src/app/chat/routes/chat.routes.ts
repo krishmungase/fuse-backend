@@ -15,6 +15,7 @@ import ChatController from "../controllers/chat.controller";
 import {
   chatIdValidator,
   listChatsValidator,
+  renameChatValidator,
   sendMessageValidator,
 } from "../validators/chat.validator";
 
@@ -58,6 +59,13 @@ const chatRouter = (): Router => {
     sendMessageValidator,
     validateMiddleware,
     asyncHandler((req, res) => chatController.streamMessage(req, res)),
+  );
+
+  chatRouter.patch(
+    "/:id",
+    renameChatValidator,
+    validateMiddleware,
+    asyncHandler((req, res) => chatController.renameChat(req, res)),
   );
 
   chatRouter.delete(

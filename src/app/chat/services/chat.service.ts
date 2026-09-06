@@ -126,6 +126,16 @@ class ChatService {
     });
   }
 
+  async renameChat(id: string, userId: string, title: string) {
+    const [chat] = await db
+      .update(this.chats)
+      .set({ title })
+      .where(and(eq(this.chats.id, id), eq(this.chats.userId, userId)))
+      .returning();
+
+    return chat;
+  }
+
   async deleteChat(id: string, userId: string) {
     const [chat] = await db
       .delete(this.chats)

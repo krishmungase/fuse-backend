@@ -35,3 +35,16 @@ export const listChatsValidator = [
     .isLength({ max: 200 })
     .withMessage("q must be 200 characters or fewer"),
 ];
+
+export const renameChatValidator = [
+  param("id").isUUID().withMessage("Invalid chat id"),
+  body("title")
+    .isString()
+    .withMessage("title must be a string")
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage("title is required")
+    .isLength({ max: 200 })
+    .withMessage("title must be 200 characters or fewer"),
+];

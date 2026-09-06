@@ -16,7 +16,7 @@ import ChatModelService from "../services/chat-model.service";
 import ChatService from "../services/chat.service";
 import { ChatModel } from "../schema/chat-model.schema";
 import { Conversation } from "../schema/chat.schema";
-import { ISendMessageBody } from "../types/chat.types";
+import { IRenameChatBody, ISendMessageBody } from "../types/chat.types";
 
 const TITLE_MAX_LENGTH = 60;
 
@@ -236,6 +236,27 @@ class ChatController {
     });
 
     return pipeUIMessageStreamToResponse({ response: res, stream });
+  }
+
+  async renameChat(req: CustomRequest<IRenameChatBody>, res: Response) {
+    const { id } = req.params as { id: string };
+    const { title } = req.body;
+
+    const chat = await this.chatService.renameChat(id, req.user!.id, title);
+
+    if (!chat) {
+      throw new ApiError(404, ERROR_MESSAGE.CHAT_NOT_FOUND);
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { id: chat.id, title: chat.title },
+          "Chat renamed.",
+        ),
+      );
   }
 
   async deleteChat(req: CustomRequest, res: Response) {
