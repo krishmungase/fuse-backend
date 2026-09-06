@@ -29,6 +29,20 @@
       "when": 1788620245889,
       "tag": "0003_chats",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788668170294,
+      "tag": "0004_chat_search",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788668302897,
+      "tag": "0005_chat_search_simple",
+      "breakpoints": true
     }
   ]
 }

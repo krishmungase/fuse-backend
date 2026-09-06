@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   uuid,
@@ -38,6 +39,10 @@ export const chats = pgTable(
   },
   (table) => [
     index("chats_user_id_updated_at_idx").on(table.userId, table.updatedAt),
+    index("chats_title_search_idx").using(
+      "gin",
+      sql`to_tsvector('simple', ${table.title})`,
+    ),
   ],
 );
 
@@ -64,6 +69,10 @@ export const conversations = pgTable(
     index("conversations_chat_id_created_at_idx").on(
       table.chatId,
       table.createdAt,
+    ),
+    index("conversations_content_search_idx").using(
+      "gin",
+      sql`to_tsvector('simple', ${table.content})`,
     ),
   ],
 );

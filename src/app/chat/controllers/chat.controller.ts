@@ -20,19 +20,10 @@ import { ISendMessageBody } from "../types/chat.types";
 
 const TITLE_MAX_LENGTH = 60;
 
-/**
- * Gap between words as the reply is written out.
- *
- * Groq returns a short answer in a single burst -- every token lands inside the
- * same millisecond -- which paints as one lump rather than as an answer being
- * written. Pacing the words is what makes it read as typing. Set to 0 to send
- * the reply as fast as the provider produces it.
- */
 const STREAM_WORD_DELAY_MS = 15;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Splits a delta on word boundaries, keeping whitespace attached to its word. */
 const toWords = (text: string) => text.match(/\s*\S+|\s+/g) ?? [text];
 
 const toPublicModel = ({ slug, label, provider }: ChatModel) => ({
@@ -108,11 +99,15 @@ class ChatController {
   }
 
   async listChats(req: CustomRequest, res: Response) {
-    const chats = await this.chatService.getChatsByUser(req.user!.id);
+    const query = typeof req.query.q === "string" ? req.query.q.trim() : "";
+
+    const chats = query
+      ? await this.chatService.searchChats(req.user!.id, query)
+      : await this.chatService.getChatsByUser(req.user!.id);
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { chats }, "Chats fetched."));
+      .json(new ApiResponse(200, { chats, query }, "Chats fetched."));
   }
 
   async getChat(req: CustomRequest, res: Response) {
@@ -143,15 +138,6 @@ class ChatController {
     );
   }
 
-  /**
-   * Streams one turn back as an AI SDK UI message stream, so the client can
-   * render tokens as they arrive.
-   *
-   * The chat id is minted by the client and the row is created lazily, on the
-   * first token: the browser can route to /chat/<id> the moment you hit send,
-   * yet a provider that fails before producing anything leaves no empty
-   * conversation behind.
-   */
   async streamMessage(req: CustomRequest<ISendMessageBody>, res: Response) {
     const { message, model, chatId } = req.body;
     const userId = req.user!.id;

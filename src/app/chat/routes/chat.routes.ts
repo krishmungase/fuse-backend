@@ -1,9 +1,3 @@
-/**
- * Router for chat. Mounted at /api/v1/chat and guarded by JWT: /models feeds
- * the client's model picker, GET / and GET /:id read persisted conversations,
- * and POST / runs a message through the workflow, streaming the reply back as
- * an AI SDK UI message stream.
- */
 import { Router } from "express";
 
 import logger from "../../../logger/winston.logger";
@@ -20,6 +14,7 @@ import ChatService from "../services/chat.service";
 import ChatController from "../controllers/chat.controller";
 import {
   chatIdValidator,
+  listChatsValidator,
   sendMessageValidator,
 } from "../validators/chat.validator";
 
@@ -47,6 +42,8 @@ const chatRouter = (): Router => {
 
   chatRouter.get(
     "/",
+    listChatsValidator,
+    validateMiddleware,
     asyncHandler((req, res) => chatController.listChats(req, res)),
   );
 

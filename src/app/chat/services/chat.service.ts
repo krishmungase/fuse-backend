@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "../../../database/connection";
 import { chats, conversations, NewConversation } from "../schema/chat.schema";
@@ -28,6 +28,50 @@ class ChatService {
       .orderBy(desc(this.chats.updatedAt));
   }
 
+  private toTsQuery(input: string) {
+    return input
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((term) => `${term}:*`)
+      .join(" & ");
+  }
+
+  async searchChats(userId: string, query: string, limit = 50) {
+    const tsQuery = this.toTsQuery(query);
+
+    if (!tsQuery) {
+      return [];
+    }
+
+    const matches = sql`to_tsquery('simple', ${tsQuery})`;
+
+    return db
+      .select({
+        id: this.chats.id,
+        title: this.chats.title,
+        createdAt: this.chats.createdAt,
+        updatedAt: this.chats.updatedAt,
+      })
+      .from(this.chats)
+      .where(
+        and(
+          eq(this.chats.userId, userId),
+          sql`(
+            to_tsvector('simple', ${this.chats.title}) @@ ${matches}
+            or exists (
+              select 1 from ${this.conversations} m
+              where m.chat_id = ${this.chats.id}
+                and to_tsvector('simple', m.content) @@ ${matches}
+            )
+          )`,
+        ),
+      )
+      .orderBy(desc(this.chats.updatedAt))
+      .limit(limit);
+  }
+
   async getChatById(id: string, userId: string) {
     const [chat] = await db
       .select()
@@ -45,11 +89,6 @@ class ChatService {
       .orderBy(asc(this.conversations.createdAt));
   }
 
-  /**
-   * The id is optional so the client can mint it before the first token and
-   * route to /chat/<id> immediately, the way ChatGPT does. Postgres fills it
-   * in when omitted.
-   */
   async createChat(userId: string, title: string, id?: string) {
     const [chat] = await db
       .insert(this.chats)
@@ -59,11 +98,6 @@ class ChatService {
     return chat;
   }
 
-  /**
-   * Owner of a chat regardless of who is asking. Used to tell "does not exist"
-   * apart from "belongs to someone else" before a stream is opened, since a
-   * client-supplied id could collide with another user's chat.
-   */
   async getChatOwnerId(id: string) {
     const [chat] = await db
       .select({ userId: this.chats.userId })

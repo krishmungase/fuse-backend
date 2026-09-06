@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 
 export const sendMessageValidator = [
   body("message")
@@ -23,4 +23,15 @@ export const sendMessageValidator = [
 
 export const chatIdValidator = [
   param("id").isUUID().withMessage("Invalid chat id"),
+];
+
+export const listChatsValidator = [
+  query("q")
+    .optional()
+    .isString()
+    .withMessage("q must be a string")
+    .bail()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage("q must be 200 characters or fewer"),
 ];
