@@ -1,0 +1,2 @@
+CREATE INDEX "chats_title_search_idx" ON "chats" USING gin (to_tsvector('english', "title"));--> statement-breakpoint
+CREATE INDEX "conversations_content_search_idx" ON "conversations" USING gin (to_tsvector('english', "content"));

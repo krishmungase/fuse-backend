@@ -92,6 +92,11 @@ const env: EnvConfig = {
     fromEmail: getRequired("SMTP_FROM_EMAIL"),
   },
 
+  llm: {
+    groqApiKey: getOptional("GROQ_API_KEY"),
+    openaiApiKey: getOptional("OPENAI_API_KEY"),
+  },
+
   rabbitmqUrl: useRabbitMQ
     ? getRequired("RABBITMQ_URL")
     : getOptional("RABBITMQ_URL"),

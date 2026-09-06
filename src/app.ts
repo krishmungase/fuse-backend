@@ -16,6 +16,7 @@ import errorHandlerMiddleware from "./middlewares/error-handler.middleware";
 import morganMiddleware from "./middlewares/morgan.middleware";
 
 import userRouter from "./app/user/routes/user.routes";
+import chatRouter from "./app/chat/routes/chat.routes";
 import MailService from "./app/mail/services/mail.service";
 
 export class App {
@@ -64,6 +65,7 @@ export class App {
     this.app.get("/api/v1/health", this.healthCheck);
 
     this.app.use("/api/v1/users", userRouter(this.rabbitmqService));
+    this.app.use("/api/v1/chat", chatRouter());
 
     this.app.use(errorHandlerMiddleware);
   }
