@@ -1,7 +1,3 @@
-/**
- * Verification email body: the message sent after registration, carrying the
- * signed link that unlocks the create-password page.
- */
 import env from "../../../config/env.config";
 
 interface VerificationEmailTemplate {

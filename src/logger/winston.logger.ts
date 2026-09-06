@@ -1,7 +1,3 @@
-/**
- * Application logger: configures Winston with custom levels, colors, and
- * a timestamped console transport. Default export used throughout the app.
- */
 import winston from "winston";
 
 const levels = {

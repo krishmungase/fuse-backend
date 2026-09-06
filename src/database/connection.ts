@@ -1,8 +1,3 @@
-/**
- * Postgres connection: configures the pg Pool, exposes a Drizzle ORM
- * instance bound to the app schema, and provides connect/disconnect helpers
- * used during server startup and shutdown.
- */
 import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 

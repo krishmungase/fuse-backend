@@ -1,7 +1,3 @@
-/**
- * User module type contracts: SafeUser (User without hashPassword) plus
- * the request body interfaces consumed by the auth and user controllers.
- */
 import { User, UserStatus } from "../schema/user.schema";
 
 export type SafeUser = Omit<User, "hashPassword">;

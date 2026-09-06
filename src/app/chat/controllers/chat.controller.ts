@@ -142,8 +142,6 @@ class ChatController {
     const { message, model, chatId } = req.body;
     const userId = req.user!.id;
 
-    // An unknown or retired slug is a client error, not a server one, so it
-    // is rejected before the request reaches a provider.
     const selected = model
       ? await this.chatModelService.getActiveModelBySlug(model)
       : await this.chatModelService.getDefaultModel();
@@ -157,9 +155,6 @@ class ChatController {
       );
     }
 
-    // Because the id comes from the client it could name a chat that already
-    // belongs to someone else. Answering 404 rather than 403 keeps the check
-    // from confirming that the id exists at all.
     const ownerId = await this.chatService.getChatOwnerId(chatId);
 
     if (ownerId && ownerId !== userId) {
@@ -172,8 +167,6 @@ class ChatController {
 
     const history = chat ? await this.chatService.getMessages(chat.id) : [];
 
-    // Stopping generation in the browser aborts the request, which should stop
-    // the provider call too rather than let it run on unread.
     const controller = new AbortController();
     res.on("close", () => controller.abort());
 
@@ -232,8 +225,6 @@ class ChatController {
             writer.write({ type: "text-end", id: textId });
           }
         } finally {
-          // A stopped or failed stream still persists what was produced, so
-          // refreshing the page shows the same partial answer.
           if (chat && reply) {
             await this.chatService.appendMessages(chat.id, [
               { role: "user", content: message },

@@ -1,8 +1,3 @@
-/**
- * Drizzle schema for the users table: defines columns, the user_status
- * pgEnum, and exports inferred User / NewUser / UpdateUser types used
- * throughout the user module.
- */
 import {
   pgTable,
   uuid,
@@ -36,8 +31,6 @@ export const users = pgTable("users", {
 
   email: text("email").notNull().unique(),
 
-  // Null between registration and the set-password step. Every read path must
-  // treat a null hash as "cannot authenticate" rather than assume a string.
   hashPassword: text("hash_password"),
 
   isEmailVerified: boolean("is_email_verified").notNull().default(false),
@@ -47,8 +40,6 @@ export const users = pgTable("users", {
   dob: date("dob"),
   avatar: text("avatar"),
 
-  // Defaults to `pending` so no code path can mint a login-capable account
-  // without explicitly going through email verification.
   status: userStatusEnum("status").notNull().default("pending"),
 
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -1,9 +1,3 @@
-/**
- * Environment configuration: loads the correct .env file based on NODE_ENV
- * and exposes a typed, validated config object (app, db, jwt, smtp,
- * rabbitmqUrl, frontendUrl). Throws at startup if any required variable is
- * missing.
- */
 import path from "path";
 import dotenv from "dotenv";
 
@@ -46,8 +40,6 @@ const getBoolean = (key: string, fallback: boolean): boolean => {
   return ["true", "1", "yes"].includes(value.trim().toLowerCase());
 };
 
-// Feature flag: disable RabbitMQ and send verification emails inline, for
-// hosts that can't run the always-on consumer.
 const useRabbitMQ = getBoolean("USE_RABBITMQ_SERVICE", true);
 
 const env: EnvConfig = {
@@ -103,7 +95,6 @@ const env: EnvConfig = {
 
   frontendUrl: getOptional("FRONTEND_URL", "http://localhost:5173"),
 
-  // Minimum gap between verification emails for the same address.
   resendCooldownSeconds: getNumber("MAIL_RESEND_COOLDOWN_SECONDS", 60),
 };
 

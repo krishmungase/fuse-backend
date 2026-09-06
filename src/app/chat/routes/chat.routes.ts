@@ -34,7 +34,6 @@ const chatRouter = (): Router => {
 
   chatRouter.use(verifyJWT);
 
-  // Declared before "/:id" so the literal path is not swallowed by the param.
   chatRouter.get(
     "/models",
     asyncHandler((req, res) => chatController.listModels(req, res)),
