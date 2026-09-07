@@ -1,83 +1,29 @@
-import { randomUUID } from "crypto";
-
-import { Logger } from "winston";
 import { Response } from "express";
-import { createUIMessageStream, pipeUIMessageStreamToResponse } from "ai";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { pipeUIMessageStreamToResponse } from "ai";
 
 import ApiError from "../../../utils/api-error";
 import ApiResponse from "../../../utils/api-response";
 import { CustomRequest } from "../../../types/common.types";
 import ERROR_MESSAGE from "../../../constants/error-message.constants";
 
-import UserService from "../../user/services/user.service";
-import { agent, checkpointer, ChatModelDefinition } from "../../workflow";
 import ChatModelService from "../services/chat-model.service";
 import ChatService from "../services/chat.service";
-import { ChatModel } from "../schema/chat-model.schema";
-import { Conversation } from "../schema/chat.schema";
+import ChatStreamService from "../services/chat-stream.service";
 import { IRenameChatBody, ISendMessageBody } from "../types/chat.types";
+import {
+  toPublicChat,
+  toPublicMessage,
+  toPublicModel,
+} from "../utils/chat.utils";
 
-const TITLE_MAX_LENGTH = 60;
-
-const STREAM_WORD_DELAY_MS = 15;
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const toWords = (text: string) => text.match(/\s*\S+|\s+/g) ?? [text];
-
-const toPublicModel = ({ slug, label, provider }: ChatModel) => ({
-  id: slug,
-  label,
-  provider,
-});
-
-const toDefinition = ({
-  slug,
-  provider,
-  model,
-}: ChatModel): ChatModelDefinition => ({
-  slug,
-  provider: provider as ChatModelDefinition["provider"],
-  model,
-});
-
-const toPublicMessage = ({
-  id,
-  role,
-  content,
-  model,
-  createdAt,
-}: Conversation) => ({
-  id,
-  role,
-  content,
-  model,
-  createdAt,
-});
-
-const deriveTitle = (message: string): string => {
-  const normalized = message.replace(/\s+/g, " ").trim();
-
-  if (normalized.length <= TITLE_MAX_LENGTH) {
-    return normalized;
-  }
-
-  const clipped = normalized.slice(0, TITLE_MAX_LENGTH);
-  const lastSpace = clipped.lastIndexOf(" ");
-
-  return `${lastSpace > 0 ? clipped.slice(0, lastSpace) : clipped}…`;
-};
-
-const toLangChainMessage = ({ role, content }: Conversation) =>
-  role === "assistant" ? new AIMessage(content) : new HumanMessage(content);
+const chatIdOf = <T>(req: CustomRequest<T>) =>
+  (req.params as { id: string }).id;
 
 class ChatController {
   constructor(
-    private userService: UserService,
     private chatModelService: ChatModelService,
     private chatService: ChatService,
-    private logger: Logger,
+    private chatStreamService: ChatStreamService,
   ) {}
 
   async listModels(req: CustomRequest, res: Response) {
@@ -100,10 +46,11 @@ class ChatController {
 
   async listChats(req: CustomRequest, res: Response) {
     const query = typeof req.query.q === "string" ? req.query.q.trim() : "";
+    const userId = req.user!.id;
 
     const chats = query
-      ? await this.chatService.searchChats(req.user!.id, query)
-      : await this.chatService.getChatsByUser(req.user!.id);
+      ? await this.chatService.searchChats(userId, query)
+      : await this.chatService.getChatsByUser(userId);
 
     return res
       .status(200)
@@ -111,9 +58,10 @@ class ChatController {
   }
 
   async getChat(req: CustomRequest, res: Response) {
-    const { id } = req.params as { id: string };
-
-    const chat = await this.chatService.getChatById(id, req.user!.id);
+    const chat = await this.chatService.getChatById(
+      chatIdOf(req),
+      req.user!.id,
+    );
 
     if (!chat) {
       throw new ApiError(404, ERROR_MESSAGE.CHAT_NOT_FOUND);
@@ -125,12 +73,7 @@ class ChatController {
       new ApiResponse(
         200,
         {
-          chat: {
-            id: chat.id,
-            title: chat.title,
-            createdAt: chat.createdAt,
-            updatedAt: chat.updatedAt,
-          },
+          chat: toPublicChat(chat),
           messages: messages.map(toPublicMessage),
         },
         "Chat fetched.",
@@ -140,117 +83,29 @@ class ChatController {
 
   async streamMessage(req: CustomRequest<ISendMessageBody>, res: Response) {
     const { message, model, chatId } = req.body;
-    const userId = req.user!.id;
 
-    const selected = model
-      ? await this.chatModelService.getActiveModelBySlug(model)
-      : await this.chatModelService.getDefaultModel();
-
-    if (!selected) {
-      throw new ApiError(
-        422,
-        model
-          ? ERROR_MESSAGE.CHAT_MODEL_NOT_FOUND
-          : ERROR_MESSAGE.NO_CHAT_MODEL_CONFIGURED,
-      );
-    }
-
-    const ownerId = await this.chatService.getChatOwnerId(chatId);
-
-    if (ownerId && ownerId !== userId) {
-      throw new ApiError(404, ERROR_MESSAGE.CHAT_NOT_FOUND);
-    }
-
-    let chat = ownerId
-      ? await this.chatService.getChatById(chatId, userId)
-      : undefined;
-
-    const history = chat ? await this.chatService.getMessages(chat.id) : [];
+    const selected = await this.chatModelService.resolveModel(model);
 
     const controller = new AbortController();
     res.on("close", () => controller.abort());
 
-    const stream = createUIMessageStream({
-      onError: (error) => {
-        this.logger.error(
-          `Chat stream failed: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        return ERROR_MESSAGE.SERVER_ERROR;
-      },
-      execute: async ({ writer }) => {
-        const textId = randomUUID();
-        let reply = "";
-
-        try {
-          const thread = { configurable: { thread_id: chatId } };
-
-          const checkpoint = await agent.getState(thread);
-          const isCheckpointEmpty = !checkpoint.values?.messages?.length;
-
-          const events = await agent.stream(
-            {
-              messages: isCheckpointEmpty
-                ? [
-                    ...history.map(toLangChainMessage),
-                    new HumanMessage(message),
-                  ]
-                : [new HumanMessage(message)],
-            },
-            {
-              ...thread,
-              streamMode: "messages",
-              context: { model: toDefinition(selected) },
-              signal: controller.signal,
-            },
-          );
-
-          for await (const [chunk] of events) {
-            const delta = chunk?.text ?? "";
-            if (!delta) {
-              continue;
-            }
-
-            if (!reply) {
-              chat ??= await this.chatService.createChat(
-                userId,
-                deriveTitle(message),
-                chatId,
-              );
-              writer.write({ type: "text-start", id: textId });
-            }
-
-            for (const word of toWords(delta)) {
-              reply += word;
-              writer.write({ type: "text-delta", id: textId, delta: word });
-
-              if (STREAM_WORD_DELAY_MS) {
-                await delay(STREAM_WORD_DELAY_MS);
-              }
-            }
-          }
-
-          if (reply) {
-            writer.write({ type: "text-end", id: textId });
-          }
-        } finally {
-          if (chat && reply) {
-            await this.chatService.appendMessages(chat.id, [
-              { role: "user", content: message },
-              { role: "assistant", content: reply, model: selected.slug },
-            ]);
-          }
-        }
-      },
+    const stream = await this.chatStreamService.createStream({
+      chatId,
+      userId: req.user!.id,
+      message,
+      model: selected,
+      signal: controller.signal,
     });
 
     return pipeUIMessageStreamToResponse({ response: res, stream });
   }
 
   async renameChat(req: CustomRequest<IRenameChatBody>, res: Response) {
-    const { id } = req.params as { id: string };
-    const { title } = req.body;
-
-    const chat = await this.chatService.renameChat(id, req.user!.id, title);
+    const chat = await this.chatService.renameChat(
+      chatIdOf(req),
+      req.user!.id,
+      req.body.title,
+    );
 
     if (!chat) {
       throw new ApiError(404, ERROR_MESSAGE.CHAT_NOT_FOUND);
@@ -268,15 +123,13 @@ class ChatController {
   }
 
   async deleteChat(req: CustomRequest, res: Response) {
-    const { id } = req.params as { id: string };
-
-    const chat = await this.chatService.deleteChat(id, req.user!.id);
+    const chat = await this.chatService.deleteChat(chatIdOf(req), req.user!.id);
 
     if (!chat) {
       throw new ApiError(404, ERROR_MESSAGE.CHAT_NOT_FOUND);
     }
 
-    await checkpointer.deleteThread(chat.id);
+    await this.chatStreamService.forgetThread(chat.id);
 
     return res
       .status(200)
