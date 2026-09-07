@@ -8,7 +8,7 @@ import { authTokens } from "../app/user/schema/auth-token.schema";
 
 const schema = { users, authTokens };
 
-const pool = new Pool({
+export const pool = new Pool({
   host: env.db.host,
   port: env.db.port,
   database: env.db.name,

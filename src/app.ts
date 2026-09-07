@@ -10,6 +10,7 @@ import express, { Application, Request, Response } from "express";
 import env from "./config/env.config";
 import logger from "./logger/winston.logger";
 import { connectDatabase } from "./database/connection";
+import { checkpointer } from "./app/workflow";
 import RabbitMQService from "./utils/rabbitmq";
 
 import errorHandlerMiddleware from "./middlewares/error-handler.middleware";
@@ -80,6 +81,9 @@ export class App {
     const PORT = env.app.port;
     try {
       await connectDatabase();
+
+      await checkpointer.setup();
+      logger.info("Chat checkpointer ready");
 
       await this.rabbitmqService.connect();
       await this.consumerSetup();

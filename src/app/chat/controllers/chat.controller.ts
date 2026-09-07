@@ -11,7 +11,7 @@ import { CustomRequest } from "../../../types/common.types";
 import ERROR_MESSAGE from "../../../constants/error-message.constants";
 
 import UserService from "../../user/services/user.service";
-import { agent, ChatModelDefinition } from "../../workflow";
+import { agent, checkpointer, ChatModelDefinition } from "../../workflow";
 import ChatModelService from "../services/chat-model.service";
 import ChatService from "../services/chat.service";
 import { ChatModel } from "../schema/chat-model.schema";
@@ -182,14 +182,22 @@ class ChatController {
         let reply = "";
 
         try {
+          const thread = { configurable: { thread_id: chatId } };
+
+          const checkpoint = await agent.getState(thread);
+          const isCheckpointEmpty = !checkpoint.values?.messages?.length;
+
           const events = await agent.stream(
             {
-              messages: [
-                ...history.map(toLangChainMessage),
-                new HumanMessage(message),
-              ],
+              messages: isCheckpointEmpty
+                ? [
+                    ...history.map(toLangChainMessage),
+                    new HumanMessage(message),
+                  ]
+                : [new HumanMessage(message)],
             },
             {
+              ...thread,
               streamMode: "messages",
               context: { model: toDefinition(selected) },
               signal: controller.signal,
@@ -267,6 +275,8 @@ class ChatController {
     if (!chat) {
       throw new ApiError(404, ERROR_MESSAGE.CHAT_NOT_FOUND);
     }
+
+    await checkpointer.deleteThread(chat.id);
 
     return res
       .status(200)

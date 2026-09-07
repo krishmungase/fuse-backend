@@ -60,7 +60,11 @@ const env: EnvConfig = {
     user: getRequired("DB_USER"),
     password: getRequired("DB_PASSWORD"),
     get url() {
-      return `postgresql://${this.user}:${this.password}@${this.host}:${this.port}/${this.name}`;
+      const user = encodeURIComponent(this.user);
+      const password = encodeURIComponent(this.password);
+      const sslMode = nodeEnv === "production" ? "no-verify" : "disable";
+
+      return `postgresql://${user}:${password}@${this.host}:${this.port}/${this.name}?sslmode=${sslMode}`;
     },
   },
 
