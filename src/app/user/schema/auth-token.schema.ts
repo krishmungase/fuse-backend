@@ -1,12 +1,3 @@
-/**
- * Drizzle schema for auth_tokens: the server-side half of the short-lived
- * tokens used by the email verification flow.
- *
- * The JWT handed to the user carries only a `jti`; the SHA-256 of that jti is
- * what lives here. That makes each token single-use (via consumedAt),
- * revocable (rows are deleted when a fresh token is issued), and useless to
- * anyone who reads the table.
- */
 import {
   pgTable,
   uuid,

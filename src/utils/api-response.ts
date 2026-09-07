@@ -1,7 +1,3 @@
-/**
- * Standard successful response envelope: wraps a status code, message,
- * and payload so all endpoints return a consistent JSON shape.
- */
 class ApiResponse {
   statusCode: number;
   data: unknown;

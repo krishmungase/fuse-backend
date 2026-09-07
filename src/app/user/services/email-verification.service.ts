@@ -1,11 +1,3 @@
-/**
- * Email verification orchestration: issues, dispatches, and consumes the
- * short-lived tokens that carry a user from registration through to a set
- * password.
- *
- * Keeps the JWT, its database record, and the outgoing mail in one place so
- * controllers only deal with "send a link" / "redeem this token".
- */
 import ApiError from "../../../utils/api-error";
 import env from "../../../config/env.config";
 import ERROR_MESSAGE from "../../../constants/error-message.constants";
@@ -24,11 +16,6 @@ class EmailVerificationService {
     private rabbitmqService: RabbitMQService,
   ) {}
 
-  /**
-   * Mints a token for `purpose` and records its hashed jti. Any outstanding
-   * token of the same purpose is dropped first, so issuing a fresh link
-   * invalidates every older one.
-   */
   private async issueToken(userId: string, purpose: AuthTokenPurpose) {
     await this.authTokenService.deleteForUser(userId, purpose);
 
@@ -44,10 +31,6 @@ class EmailVerificationService {
     return signed;
   }
 
-  /**
-   * Rejects a resend that arrives inside the cooldown window, so the endpoint
-   * can't be used to flood an address with mail.
-   */
   async assertNotRateLimited(userId: string): Promise<void> {
     const latest = await this.authTokenService.getLatestForUser(
       userId,

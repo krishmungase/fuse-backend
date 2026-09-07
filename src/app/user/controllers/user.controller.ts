@@ -1,8 +1,3 @@
-/**
- * User controller: HTTP handlers for the authenticated profile endpoints --
- * current user, change password, and profile update. Authentication itself
- * lives in AuthController.
- */
 import { Logger } from "winston";
 import { Response } from "express";
 
@@ -39,8 +34,6 @@ class UserController {
       throw new ApiError(404, ERROR_MESSAGE.USER_NOT_FOUND);
     }
 
-    // Only reachable for an activated account, but a null hash would make the
-    // comparison below throw, so it is treated as "no valid current password".
     if (!user.hashPassword) {
       throw new ApiError(403, ERROR_MESSAGE.REGISTRATION_INCOMPLETE);
     }

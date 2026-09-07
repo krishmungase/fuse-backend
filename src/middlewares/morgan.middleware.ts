@@ -1,7 +1,3 @@
-/**
- * HTTP request logging middleware: pipes Morgan's access log into the
- * Winston logger at http level, and skips logging in production.
- */
 import morgan from "morgan";
 
 import env from "../config/env.config";

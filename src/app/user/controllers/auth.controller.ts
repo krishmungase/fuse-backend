@@ -1,11 +1,3 @@
-/**
- * Auth controller: the registration -> email verification -> set password
- * flow, plus login, refresh, and logout.
- *
- * Registration deliberately creates a `pending` user with no password hash.
- * The account only becomes usable once the emailed link is redeemed and a
- * password is set, at which point it flips to `active`.
- */
 import { Logger } from "winston";
 import { Response } from "express";
 
@@ -40,11 +32,6 @@ class AuthController {
     private logger: Logger,
   ) {}
 
-  /**
-   * Step 1. Records the name and email as a pending user and queues the
-   * verification link. Signing up again with a pending address re-sends the
-   * link rather than erroring, since the user has no way to log in yet.
-   */
   async register(req: CustomRequest<IRegisterBody>, res: Response) {
     const email = req.body.email.toLowerCase();
     const name = req.body.name.trim();
@@ -60,7 +47,6 @@ class AuthController {
     if (existing) {
       await this.emailVerificationService.assertNotRateLimited(existing.id);
 
-      // Name may have changed since the abandoned attempt; keep the latest.
       const refreshed = await this.userService.updateUser(existing.id, {
         name,
       });
@@ -91,11 +77,6 @@ class AuthController {
       .json(new ApiResponse(202, { email }, CHECK_INBOX_MESSAGE));
   }
 
-  /**
-   * Re-sends the verification link. Always answers with the same message
-   * whether or not the address exists, so the endpoint can't be used to test
-   * which emails are registered.
-   */
   async resendVerification(
     req: CustomRequest<IResendVerificationBody>,
     res: Response,
@@ -115,11 +96,6 @@ class AuthController {
       .json(new ApiResponse(202, { email }, CHECK_INBOX_MESSAGE));
   }
 
-  /**
-   * Step 2. Redeems the token from the emailed link and hands back a separate,
-   * shorter-lived token that authorises exactly one password write. The link
-   * token itself is burned here, so it can't be replayed later.
-   */
   async verifyEmail(req: CustomRequest<IVerifyEmailBody>, res: Response) {
     const userId = await this.emailVerificationService.consumeToken(
       req.body.token,
@@ -156,11 +132,6 @@ class AuthController {
       );
   }
 
-  /**
-   * Step 3. Writes the password and activates the account. No session is
-   * issued: the user is sent to the login page to sign in with the
-   * credentials they just chose.
-   */
   async setPassword(req: CustomRequest<ISetPasswordBody>, res: Response) {
     const { setupToken, password, confirmPassword } = req.body;
 
@@ -212,8 +183,6 @@ class AuthController {
       throw new ApiError(401, ERROR_MESSAGE.INVALID_CREDENTIALS);
     }
 
-    // A pending account has no password to compare against, so this is
-    // reported distinctly rather than as bad credentials.
     if (user.status === "pending" || !user.hashPassword) {
       throw new ApiError(403, ERROR_MESSAGE.REGISTRATION_INCOMPLETE);
     }

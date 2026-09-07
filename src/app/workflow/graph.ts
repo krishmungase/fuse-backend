@@ -1,12 +1,20 @@
 import { z } from "zod";
 import { SystemMessage } from "@langchain/core/messages";
 import { END, GraphNode, START, StateGraph } from "@langchain/langgraph";
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 
+import { pool } from "../../database/connection";
 import { MessagesState } from "./state";
 import { getChatModel } from "./model";
 import { CHAT_PROVIDERS } from "../chat/schema/chat-model.schema";
 
 const SYSTEM_PROMPT = "You are a helpful assistant.";
+
+export const CHECKPOINT_SCHEMA = "langgraph";
+
+export const checkpointer = new PostgresSaver(pool, undefined, {
+  schema: CHECKPOINT_SCHEMA,
+});
 
 export const ChatContext = z.object({
   model: z.object({
@@ -46,4 +54,4 @@ export const agent = new StateGraph({
   .addNode("llmCall", llmCall)
   .addEdge(START, "llmCall")
   .addEdge("llmCall", END)
-  .compile();
+  .compile({ checkpointer });

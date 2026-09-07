@@ -1,8 +1,3 @@
-/**
- * JWT authentication middleware: pulls the access token from cookies or
- * the Authorization header, verifies it, loads the matching user from the
- * database, and attaches a sanitized user (no hashPassword) to req.user.
- */
 import { eq } from "drizzle-orm";
 import { NextFunction, Response, Request } from "express";
 

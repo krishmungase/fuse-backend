@@ -1,8 +1,3 @@
-/**
- * Postgres connection: configures the pg Pool, exposes a Drizzle ORM
- * instance bound to the app schema, and provides connect/disconnect helpers
- * used during server startup and shutdown.
- */
 import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
@@ -13,7 +8,7 @@ import { authTokens } from "../app/user/schema/auth-token.schema";
 
 const schema = { users, authTokens };
 
-const pool = new Pool({
+export const pool = new Pool({
   host: env.db.host,
   port: env.db.port,
   database: env.db.name,

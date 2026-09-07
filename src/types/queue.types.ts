@@ -1,6 +1,3 @@
-/**
- * RabbitMQ topology names and the payloads that travel over it.
- */
 export const MAIL_QUEUES = {
   VERIFICATION: "verification",
   VERIFICATION_FAILED: "verification.failed",

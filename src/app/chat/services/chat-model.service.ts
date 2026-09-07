@@ -1,6 +1,8 @@
 import { and, asc, eq } from "drizzle-orm";
 
+import ApiError from "../../../utils/api-error";
 import { db } from "../../../database/connection";
+import ERROR_MESSAGE from "../../../constants/error-message.constants";
 import { chatModels } from "../schema/chat-model.schema";
 
 class ChatModelService {
@@ -8,6 +10,23 @@ class ChatModelService {
 
   constructor(chatModelsTable: typeof chatModels) {
     this.chatModels = chatModelsTable;
+  }
+
+  async resolveModel(slug?: string) {
+    const model = slug
+      ? await this.getActiveModelBySlug(slug)
+      : await this.getDefaultModel();
+
+    if (!model) {
+      throw new ApiError(
+        422,
+        slug
+          ? ERROR_MESSAGE.CHAT_MODEL_NOT_FOUND
+          : ERROR_MESSAGE.NO_CHAT_MODEL_CONFIGURED,
+      );
+    }
+
+    return model;
   }
 
   async getActiveModels() {

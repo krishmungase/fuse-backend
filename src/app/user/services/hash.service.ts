@@ -1,7 +1,3 @@
-/**
- * Hashing service: thin bcrypt wrapper for hashing passwords (and other
- * sensitive values) and comparing plaintext against stored hashes.
- */
 import bcrypt from "bcrypt";
 
 class HashService {

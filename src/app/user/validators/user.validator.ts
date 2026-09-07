@@ -1,9 +1,3 @@
-/**
- * express-validator chains for the user endpoints: the registration and
- * email-verification flow, login, refresh, change-password, and profile
- * update. Used by the routes together with validateMiddleware to enforce
- * request body shape.
- */
 import { body } from "express-validator";
 
 import { USER_STATUSES } from "../schema/user.schema";

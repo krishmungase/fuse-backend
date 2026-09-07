@@ -1,10 +1,3 @@
-/**
- * User route definitions: wires the auth and user controllers with their
- * service dependencies, and exposes the registration/verification flow
- * (/register, /resend-verification, /verify-email, /set-password), the session
- * endpoints (/login, /refresh, /logout), and the authenticated profile
- * endpoints (/me, /change-password).
- */
 import { Router } from "express";
 
 import logger from "../../../logger/winston.logger";
@@ -58,8 +51,6 @@ const userRouter = (rabbitmqService: RabbitMQService): Router => {
 
   const userController = new UserController(userService, hashService, logger);
 
-  /* Registration and email verification */
-
   userRouter.post(
     "/register",
     registerValidator,
@@ -88,8 +79,6 @@ const userRouter = (rabbitmqService: RabbitMQService): Router => {
     asyncHandler((req, res) => authController.setPassword(req, res)),
   );
 
-  /* Session */
-
   userRouter.post(
     "/login",
     loginValidator,
@@ -109,8 +98,6 @@ const userRouter = (rabbitmqService: RabbitMQService): Router => {
     verifyJWT,
     asyncHandler((req, res) => authController.logout(req, res)),
   );
-
-  /* Profile */
 
   userRouter.get(
     "/me",

@@ -1,8 +1,3 @@
-/**
- * Global Express error handler: normalizes any thrown error into an
- * ApiError, logs it, and returns a JSON response (with the stack trace
- * included only in development).
- */
 import { NextFunction, Request, Response } from "express";
 
 import env from "../config/env.config";

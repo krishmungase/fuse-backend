@@ -8,7 +8,6 @@ const ERROR_MESSAGE = {
   USER_ALREADY_EXISTS: "User with this email already exists",
   ACCOUNT_INACTIVE: "Account is not active",
 
-  // Email verification flow
   INVALID_VERIFICATION_TOKEN:
     "This link is invalid or has already been used. Please request a new one.",
   EXPIRED_VERIFICATION_TOKEN:
@@ -20,7 +19,6 @@ const ERROR_MESSAGE = {
   EMAIL_ALREADY_VERIFIED: "This email address is already verified",
   PASSWORD_MISMATCH: "Password and confirm password do not match",
   PASSWORD_ALREADY_SET: "A password has already been set for this account",
-  // Chat
   CHAT_NOT_FOUND: "Chat not found",
   CHAT_MODEL_NOT_FOUND: "The selected model is not available",
   NO_CHAT_MODEL_CONFIGURED: "No chat model is configured",

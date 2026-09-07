@@ -1,8 +1,3 @@
-/**
- * User data-access service: encapsulates Drizzle queries against the
- * users table (list/find/create/update/delete) so controllers stay
- * persistence-agnostic.
- */
 import { desc, eq } from "drizzle-orm";
 
 import { db } from "../../../database/connection";

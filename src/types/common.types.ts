@@ -1,8 +1,3 @@
-/**
- * Shared application types: augments Express with the authenticated user
- * shape and defines CustomRequest/CustomJwtPayload helpers used by
- * controllers and middlewares.
- */
 import { Request } from "express";
 import { JwtPayload } from "jsonwebtoken";
 
@@ -21,7 +16,6 @@ export interface CustomJwtPayload extends JwtPayload {
   user: { id: string };
 }
 
-/** Payload of the short-lived tokens used by the email verification flow. */
 export interface EmailJwtPayload extends JwtPayload {
   sub: string;
   jti: string;

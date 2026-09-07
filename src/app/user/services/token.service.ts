@@ -1,7 +1,3 @@
-/**
- * JWT token service: signs and verifies access, refresh, and short-lived
- * email-flow tokens using the secrets and TTLs configured in env, with HS256.
- */
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 
@@ -44,11 +40,6 @@ class TokenService {
     return jwt.verify(token, env.jwt.refreshSecret) as CustomJwtPayload;
   }
 
-  /**
-   * Signs a single-purpose token for the email verification flow. The caller is
-   * expected to persist the returned jti (hashed) so the token can be consumed
-   * exactly once; the token itself carries no user data beyond the subject.
-   */
   signEmailToken(userId: string, purpose: AuthTokenPurpose): SignedEmailToken {
     const jti = crypto.randomUUID();
     const expiresIn =
@@ -66,11 +57,6 @@ class TokenService {
     return { token, jti, expiresAt: new Date(exp * 1000) };
   }
 
-  /**
-   * Verifies signature and expiry, and asserts the token was minted for the
-   * purpose being attempted — so a mail link can never be replayed against the
-   * password-setup endpoint, or vice versa.
-   */
   verifyEmailToken(token: string, purpose: AuthTokenPurpose): EmailJwtPayload {
     const decoded = jwt.verify(token, env.jwt.emailSecret) as EmailJwtPayload;
 
@@ -81,7 +67,6 @@ class TokenService {
     return decoded;
   }
 
-  /** Hashes a jti for storage; SHA-256 is enough for a random 128-bit value. */
   hashJti(jti: string): string {
     return crypto.createHash("sha256").update(jti).digest("hex");
   }
