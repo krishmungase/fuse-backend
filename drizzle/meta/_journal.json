@@ -43,6 +43,13 @@
       "when": 1788668302897,
       "tag": "0005_chat_search_simple",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788873927232,
+      "tag": "0006_conversation_metadata",
+      "breakpoints": true
     }
   ]
 }
