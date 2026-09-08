@@ -42,6 +42,7 @@ export interface SmtpConfig {
 export interface LlmConfig {
   groqApiKey: string;
   openaiApiKey: string;
+  serpApiKey: string;
 }
 
 export interface EnvConfig {

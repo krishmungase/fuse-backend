@@ -91,6 +91,7 @@ const env: EnvConfig = {
   llm: {
     groqApiKey: getOptional("GROQ_API_KEY"),
     openaiApiKey: getOptional("OPENAI_API_KEY"),
+    serpApiKey: getOptional("SERP_API_KEY"),
   },
 
   rabbitmqUrl: useRabbitMQ

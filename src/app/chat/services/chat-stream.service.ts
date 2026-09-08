@@ -60,7 +60,11 @@ class ChatStreamService {
           });
 
           for await (const [chunk] of events) {
-            const delta = chunk?.text ?? "";
+            if (chunk?.getType() !== "ai") {
+              continue;
+            }
+
+            const delta = chunk.text ?? "";
             if (!delta) {
               continue;
             }
