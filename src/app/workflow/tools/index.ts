@@ -1,6 +1,6 @@
 import { productTool } from "./products";
-import { webSearch } from "./websearch";
+import { webSearchTool } from "./web-search";
 
-export { productTool, webSearch };
+export { productTool, webSearchTool };
 
-export const tools = [productTool, webSearch];
+export const tools = [productTool, webSearchTool];

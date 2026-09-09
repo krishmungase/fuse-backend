@@ -43,6 +43,7 @@ export interface LlmConfig {
   groqApiKey: string;
   openaiApiKey: string;
   serpApiKey: string;
+  tavilyApiKey: string;
 }
 
 export interface EnvConfig {
