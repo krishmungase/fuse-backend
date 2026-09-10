@@ -17,6 +17,8 @@ import {
   toModelDefinition,
   toWords,
 } from "../utils/chat.utils";
+import { PRODUCT_TOOL_NAME, toProductGroup } from "../utils/product.utils";
+import { ProductGroup } from "../schema/chat.schema";
 
 const STREAM_WORD_DELAY_MS = 15;
 
@@ -49,6 +51,7 @@ class ChatStreamService {
         const textId = randomUUID();
         let target = chat;
         let reply = "";
+        const productGroups: ProductGroup[] = [];
 
         try {
           const events = await this.runGraph({
@@ -60,7 +63,37 @@ class ChatStreamService {
           });
 
           for await (const [chunk] of events) {
-            const delta = chunk?.text ?? "";
+            if (chunk?.getType() === "tool") {
+              if (chunk.name !== PRODUCT_TOOL_NAME) {
+                continue;
+              }
+
+              const group = toProductGroup(chunk.content);
+              if (!group) {
+                continue;
+              }
+
+              target ??= await this.chatService.createChat(
+                userId,
+                deriveTitle(message),
+                chatId,
+              );
+
+              productGroups.push(group);
+              writer.write({
+                type: "data-products",
+                id: randomUUID(),
+                data: group,
+              });
+
+              continue;
+            }
+
+            if (chunk?.getType() !== "ai") {
+              continue;
+            }
+
+            const delta = chunk.text ?? "";
             if (!delta) {
               continue;
             }
@@ -88,10 +121,15 @@ class ChatStreamService {
             writer.write({ type: "text-end", id: textId });
           }
         } finally {
-          if (target && reply) {
+          if (target && (reply || productGroups.length)) {
             await this.chatService.appendMessages(target.id, [
               { role: "user", content: message },
-              { role: "assistant", content: reply, model: model.slug },
+              {
+                role: "assistant",
+                content: reply,
+                model: model.slug,
+                metadata: productGroups.length ? { productGroups } : null,
+              },
             ]);
           }
         }

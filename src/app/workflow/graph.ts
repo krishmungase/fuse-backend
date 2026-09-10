@@ -1,14 +1,12 @@
-import { z } from "zod";
-import { SystemMessage } from "@langchain/core/messages";
-import { END, GraphNode, START, StateGraph } from "@langchain/langgraph";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { END, START, StateGraph } from "@langchain/langgraph";
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 
+import { llmCall } from "./llm-call";
+import { AIMessage } from "langchain";
+import { tools } from "./tools";
 import { pool } from "../../database/connection";
-import { MessagesState } from "./state";
-import { getChatModel } from "./model";
-import { CHAT_PROVIDERS } from "../chat/schema/chat-model.schema";
-
-const SYSTEM_PROMPT = "You are a helpful assistant.";
+import { ChatContext, MessagesState } from "./state";
 
 export const CHECKPOINT_SCHEMA = "langgraph";
 
@@ -16,35 +14,20 @@ export const checkpointer = new PostgresSaver(pool, undefined, {
   schema: CHECKPOINT_SCHEMA,
 });
 
-export const ChatContext = z.object({
-  model: z.object({
-    slug: z.string(),
-    provider: z.enum(CHAT_PROVIDERS),
-    model: z.string(),
-  }),
-});
+const toolNode = new ToolNode(tools);
 
-export type ChatContext = z.infer<typeof ChatContext>;
+const shouldCallTool = (state: typeof MessagesState.State) => {
+  const lastMessage = state.messages[state.messages.length - 1];
 
-export const llmCall: GraphNode<typeof MessagesState, ChatContext> = async (
-  state,
-  config,
-) => {
-  const definition = config.context?.model;
-  if (!definition) {
-    throw new Error("No chat model was provided to the graph context.");
+  if (
+    lastMessage &&
+    AIMessage.isInstance(lastMessage) &&
+    lastMessage.tool_calls?.length
+  ) {
+    return "toolNode";
   }
 
-  const llm = getChatModel(definition);
-
-  const response = await llm.invoke([
-    new SystemMessage(SYSTEM_PROMPT),
-    ...state.messages,
-  ]);
-
-  return {
-    messages: [response],
-  };
+  return END;
 };
 
 export const agent = new StateGraph({
@@ -52,6 +35,8 @@ export const agent = new StateGraph({
   context: ChatContext,
 })
   .addNode("llmCall", llmCall)
+  .addNode("toolNode", toolNode)
   .addEdge(START, "llmCall")
-  .addEdge("llmCall", END)
+  .addConditionalEdges("llmCall", shouldCallTool)
+  .addEdge("toolNode", "llmCall")
   .compile({ checkpointer });

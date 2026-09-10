@@ -34,12 +34,14 @@ export const toPublicMessage = ({
   role,
   content,
   model,
+  metadata,
   createdAt,
 }: Conversation) => ({
   id,
   role,
   content,
   model,
+  productGroups: metadata?.productGroups ?? [],
   createdAt,
 });
 

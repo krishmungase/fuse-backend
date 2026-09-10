@@ -4,6 +4,7 @@ import {
   uuid,
   text,
   index,
+  jsonb,
   timestamp,
   pgEnum,
 } from "drizzle-orm/pg-core";
@@ -46,6 +47,26 @@ export const chats = pgTable(
   ],
 );
 
+export type ProductCard = {
+  id?: string;
+  title?: string;
+  description?: string;
+  price?: string;
+  source?: string;
+  productLink?: string;
+  thumbnail?: string;
+  rating?: number;
+};
+
+export type ProductGroup = {
+  query: string;
+  products: ProductCard[];
+};
+
+export type ConversationMetadata = {
+  productGroups?: ProductGroup[];
+};
+
 export const conversations = pgTable(
   "conversations",
   {
@@ -60,6 +81,8 @@ export const conversations = pgTable(
     content: text("content").notNull(),
 
     model: text("model"),
+
+    metadata: jsonb("metadata").$type<ConversationMetadata>(),
 
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
