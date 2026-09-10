@@ -46,6 +46,16 @@ export interface LlmConfig {
   tavilyApiKey: string;
 }
 
+export interface GoogleOAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
+
+export interface SecurityConfig {
+  tokenEncryptionKey: string;
+}
+
 export interface EnvConfig {
   app: AppConfig;
   db: DatabaseConfig;
@@ -55,4 +65,6 @@ export interface EnvConfig {
   frontendUrl: string;
   resendCooldownSeconds: number;
   llm: LlmConfig;
+  google: GoogleOAuthConfig;
+  security: SecurityConfig;
 }

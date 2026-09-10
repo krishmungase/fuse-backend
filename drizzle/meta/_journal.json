@@ -50,6 +50,13 @@
       "when": 1788873927232,
       "tag": "0006_conversation_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789046489772,
+      "tag": "0007_connections",
+      "breakpoints": true
     }
   ]
 }

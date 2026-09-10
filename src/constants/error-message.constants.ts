@@ -25,6 +25,12 @@ const ERROR_MESSAGE = {
 
   RESEND_COOLDOWN:
     "A verification email was just sent. Please wait a moment before requesting another.",
+
+  UNKNOWN_CONNECTOR: "That integration is not supported",
+  CONNECTION_NOT_FOUND: "This app is not connected",
+  INVALID_OAUTH_STATE:
+    "This connection link is invalid or has expired. Please try connecting again.",
+  OAUTH_DENIED: "Access was not granted",
 };
 
 export default ERROR_MESSAGE;

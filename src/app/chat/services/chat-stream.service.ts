@@ -18,7 +18,12 @@ import {
   toWords,
 } from "../utils/chat.utils";
 import { PRODUCT_TOOL_NAME, toProductGroup } from "../utils/product.utils";
-import { ProductGroup } from "../schema/chat.schema";
+import { WEATHER_TOOL_NAME, toWeatherReport } from "../utils/weather.utils";
+import {
+  ConversationMetadata,
+  ProductGroup,
+  WeatherReport,
+} from "../schema/chat.schema";
 
 const STREAM_WORD_DELAY_MS = 15;
 
@@ -52,10 +57,12 @@ class ChatStreamService {
         let target = chat;
         let reply = "";
         const productGroups: ProductGroup[] = [];
+        const weatherReports: WeatherReport[] = [];
 
         try {
           const events = await this.runGraph({
             chatId,
+            userId,
             message,
             model,
             history,
@@ -64,27 +71,43 @@ class ChatStreamService {
 
           for await (const [chunk] of events) {
             if (chunk?.getType() === "tool") {
-              if (chunk.name !== PRODUCT_TOOL_NAME) {
-                continue;
+              if (chunk.name === PRODUCT_TOOL_NAME) {
+                const group = toProductGroup(chunk.content);
+
+                if (group) {
+                  target ??= await this.chatService.createChat(
+                    userId,
+                    deriveTitle(message),
+                    chatId,
+                  );
+
+                  productGroups.push(group);
+                  writer.write({
+                    type: "data-products",
+                    id: randomUUID(),
+                    data: group,
+                  });
+                }
               }
 
-              const group = toProductGroup(chunk.content);
-              if (!group) {
-                continue;
+              if (chunk.name === WEATHER_TOOL_NAME) {
+                const report = toWeatherReport(chunk.content);
+
+                if (report) {
+                  target ??= await this.chatService.createChat(
+                    userId,
+                    deriveTitle(message),
+                    chatId,
+                  );
+
+                  weatherReports.push(report);
+                  writer.write({
+                    type: "data-weather",
+                    id: randomUUID(),
+                    data: report,
+                  });
+                }
               }
-
-              target ??= await this.chatService.createChat(
-                userId,
-                deriveTitle(message),
-                chatId,
-              );
-
-              productGroups.push(group);
-              writer.write({
-                type: "data-products",
-                id: randomUUID(),
-                data: group,
-              });
 
               continue;
             }
@@ -121,14 +144,26 @@ class ChatStreamService {
             writer.write({ type: "text-end", id: textId });
           }
         } finally {
-          if (target && (reply || productGroups.length)) {
+          const metadata: ConversationMetadata = {};
+
+          if (productGroups.length) {
+            metadata.productGroups = productGroups;
+          }
+
+          if (weatherReports.length) {
+            metadata.weatherReports = weatherReports;
+          }
+
+          const hasCards = Object.keys(metadata).length > 0;
+
+          if (target && (reply || hasCards)) {
             await this.chatService.appendMessages(target.id, [
               { role: "user", content: message },
               {
                 role: "assistant",
                 content: reply,
                 model: model.slug,
-                metadata: productGroups.length ? { productGroups } : null,
+                metadata: hasCards ? metadata : null,
               },
             ]);
           }
@@ -155,12 +190,14 @@ class ChatStreamService {
 
   private async runGraph({
     chatId,
+    userId,
     message,
     model,
     history,
     signal,
   }: {
     chatId: string;
+    userId: string;
     message: string;
     model: ChatModel;
     history: Awaited<ReturnType<ChatService["getMessages"]>>;
@@ -180,7 +217,7 @@ class ChatStreamService {
       {
         ...thread,
         streamMode: "messages",
-        context: { model: toModelDefinition(model) },
+        context: { userId, model: toModelDefinition(model) },
         signal,
       },
     );

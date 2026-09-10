@@ -1,10 +1,10 @@
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { END, START, StateGraph } from "@langchain/langgraph";
+import { END, GraphNode, START, StateGraph } from "@langchain/langgraph";
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 
 import { llmCall } from "./llm-call";
 import { AIMessage } from "langchain";
-import { tools } from "./tools";
+import { buildTools } from "./tools";
 import { pool } from "../../database/connection";
 import { ChatContext, MessagesState } from "./state";
 
@@ -14,7 +14,13 @@ export const checkpointer = new PostgresSaver(pool, undefined, {
   schema: CHECKPOINT_SCHEMA,
 });
 
-const toolNode = new ToolNode(tools);
+const toolNode: GraphNode<typeof MessagesState, ChatContext> = async (
+  state,
+  config,
+) => {
+  const tools = await buildTools(config.context?.userId);
+  return new ToolNode(tools).invoke(state, config);
+};
 
 const shouldCallTool = (state: typeof MessagesState.State) => {
   const lastMessage = state.messages[state.messages.length - 1];

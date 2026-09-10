@@ -1,6 +1,6 @@
 import { TavilySearch } from "@langchain/tavily";
 
-import env from "../../../config/env.config";
+import env from "../../../../config/env.config";
 
 export const webSearchTool = new TavilySearch({
   tavilyApiKey: env.llm.tavilyApiKey,

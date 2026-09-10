@@ -8,6 +8,7 @@ export const MessagesState = new StateSchema({
 });
 
 export const ChatContext = z.object({
+  userId: z.string(),
   model: z.object({
     slug: z.string(),
     provider: z.enum(CHAT_PROVIDERS),
