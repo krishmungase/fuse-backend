@@ -63,8 +63,21 @@ export type ProductGroup = {
   products: ProductCard[];
 };
 
+export type WeatherReport = {
+  location: string;
+  country?: string;
+  temperature: number;
+  feelsLike: number;
+  humidity?: number;
+  windSpeed: number;
+  isDay: boolean;
+  label: string;
+  icon: string;
+};
+
 export type ConversationMetadata = {
   productGroups?: ProductGroup[];
+  weatherReports?: WeatherReport[];
 };
 
 export const conversations = pgTable(

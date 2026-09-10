@@ -42,6 +42,7 @@ export const toPublicMessage = ({
   content,
   model,
   productGroups: metadata?.productGroups ?? [],
+  weatherReports: metadata?.weatherReports ?? [],
   createdAt,
 });
 
