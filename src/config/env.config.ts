@@ -95,6 +95,19 @@ const env: EnvConfig = {
     tavilyApiKey: getOptional("TAVILY_API_KEY"),
   },
 
+  google: {
+    clientId: getOptional("GOOGLE_CLIENT_ID"),
+    clientSecret: getOptional("GOOGLE_CLIENT_SECRET"),
+    redirectUri: getOptional(
+      "GOOGLE_REDIRECT_URI",
+      "http://localhost:3000/api/v1/connections/callback",
+    ),
+  },
+
+  security: {
+    tokenEncryptionKey: getOptional("TOKEN_ENCRYPTION_KEY"),
+  },
+
   rabbitmqUrl: useRabbitMQ
     ? getRequired("RABBITMQ_URL")
     : getOptional("RABBITMQ_URL"),

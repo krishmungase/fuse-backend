@@ -1,7 +1,7 @@
 import { GraphNode } from "@langchain/langgraph";
 import { SystemMessage } from "@langchain/core/messages";
 
-import { tools } from "./tools";
+import { buildTools } from "./tools";
 import { getChatModel } from "./model";
 import { ChatContext, MessagesState } from "./state";
 import { buildSystemPrompt } from "../../constants/system-prompt.constants";
@@ -20,6 +20,8 @@ export const llmCall: GraphNode<typeof MessagesState, ChatContext> = async (
   if (!llm.bindTools) {
     throw new Error(`Model "${definition.slug}" does not support tools.`);
   }
+
+  const tools = await buildTools(config.context?.userId);
 
   const response = await llm
     .bindTools(tools)

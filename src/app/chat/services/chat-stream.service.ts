@@ -62,6 +62,7 @@ class ChatStreamService {
         try {
           const events = await this.runGraph({
             chatId,
+            userId,
             message,
             model,
             history,
@@ -189,12 +190,14 @@ class ChatStreamService {
 
   private async runGraph({
     chatId,
+    userId,
     message,
     model,
     history,
     signal,
   }: {
     chatId: string;
+    userId: string;
     message: string;
     model: ChatModel;
     history: Awaited<ReturnType<ChatService["getMessages"]>>;
@@ -214,7 +217,7 @@ class ChatStreamService {
       {
         ...thread,
         streamMode: "messages",
-        context: { model: toModelDefinition(model) },
+        context: { userId, model: toModelDefinition(model) },
         signal,
       },
     );

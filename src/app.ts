@@ -18,6 +18,7 @@ import morganMiddleware from "./middlewares/morgan.middleware";
 
 import userRouter from "./app/user/routes/user.routes";
 import chatRouter from "./app/chat/routes/chat.routes";
+import connectionRouter from "./app/connection/routes/connection.routes";
 import MailService from "./app/mail/services/mail.service";
 
 export class App {
@@ -67,6 +68,7 @@ export class App {
 
     this.app.use("/api/v1/users", userRouter(this.rabbitmqService));
     this.app.use("/api/v1/chat", chatRouter());
+    this.app.use("/api/v1/connections", connectionRouter());
 
     this.app.use(errorHandlerMiddleware);
   }
