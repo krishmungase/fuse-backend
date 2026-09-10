@@ -1,27 +1,8 @@
 import { StructuredToolInterface } from "@langchain/core/tools";
 
-import { connections } from "../../connection/schema/connection.schema";
-import AccessTokenService from "../../connection/services/access-token.service";
-import ConnectionService from "../../connection/services/connection.service";
-import OAuthService from "../../connection/services/oauth.service";
-
-import { productTool } from "./products";
-import { webSearchTool } from "./web-search";
-import { weatherTool } from "./weather";
+import { baseTools } from "./catalog";
 import { CONNECTOR_TOOL_FACTORIES } from "./google";
-
-const connectionService = new ConnectionService(connections);
-
-const accessTokenService = new AccessTokenService(
-  connectionService,
-  new OAuthService(),
-);
-
-export const baseTools: StructuredToolInterface[] = [
-  productTool,
-  webSearchTool,
-  weatherTool,
-];
+import { createToolContext, listConnectedProviders } from "./tool-context";
 
 export const buildTools = async (
   userId?: string,
@@ -30,13 +11,13 @@ export const buildTools = async (
     return baseTools;
   }
 
-  const providers = await connectionService.listActiveProviders(userId);
+  const providers = await listConnectedProviders(userId);
 
   if (!providers.length) {
     return baseTools;
   }
 
-  const context = { userId, accessTokenService };
+  const context = createToolContext(userId);
 
   const connectorTools = providers.flatMap((provider) =>
     (CONNECTOR_TOOL_FACTORIES[provider] ?? []).map((factory) =>
@@ -47,4 +28,4 @@ export const buildTools = async (
   return [...baseTools, ...connectorTools];
 };
 
-export { productTool, webSearchTool, weatherTool };
+export { baseTools, productTool, webSearchTool, weatherTool } from "./catalog";

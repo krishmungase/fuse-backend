@@ -2,7 +2,7 @@ import * as z from "zod";
 import { tool } from "langchain";
 import { getJson } from "serpapi";
 
-import env from "../../../config/env.config";
+import env from "../../../../config/env.config";
 
 const MAX_RESULTS = 5;
 

@@ -4,7 +4,7 @@ import { SystemMessage } from "@langchain/core/messages";
 import { buildTools } from "./tools";
 import { getChatModel } from "./model";
 import { ChatContext, MessagesState } from "./state";
-import { buildSystemPrompt } from "../../constants/system-prompt.constants";
+import { buildSystemPrompt } from "./prompts";
 
 export const llmCall: GraphNode<typeof MessagesState, ChatContext> = async (
   state,
