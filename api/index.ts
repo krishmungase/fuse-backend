@@ -1,39 +1,39 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Request, Response } from "express";
 
-import { App } from "../src/app";
-import logger from "../src/logger/winston.logger";
+type ExpressServer = (req: Request, res: Response) => void;
 
-const application = new App();
+let cachedServer: Promise<ExpressServer> | null = null;
 
-const server = application.getApp();
+const loadServer = async (): Promise<ExpressServer> => {
+  const { App } = await import("../src/app");
 
-let bootError: unknown = null;
+  const application = new App();
+  await application.bootstrap();
 
-const ready = application.bootstrap().catch((error: unknown) => {
-  bootError = error;
-
-  logger.error(
-    `Bootstrap failed: ${error instanceof Error ? error.stack : String(error)}`,
-  );
-});
+  return application.getApp() as unknown as ExpressServer;
+};
 
 export default async function handler(
   req: IncomingMessage,
   res: ServerResponse,
 ) {
-  await ready;
+  try {
+    cachedServer ??= loadServer();
 
-  if (bootError) {
-    const message =
-      bootError instanceof Error ? bootError.message : String(bootError);
+    const server = await cachedServer;
+
+    return server(req as Request, res as Response);
+  } catch (error) {
+    cachedServer = null;
+
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+
+    console.error("Startup failed:", stack ?? message);
 
     res.statusCode = 500;
     res.setHeader("content-type", "application/json");
     res.end(JSON.stringify({ error: "Startup failed", message }));
-
-    return;
   }
-
-  return server(req as Request, res as Response);
 }
