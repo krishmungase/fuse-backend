@@ -20,6 +20,10 @@ export const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
+pool.on("error", (error: Error) => {
+  logger.error(`Unexpected database pool error: ${error.message}`);
+});
+
 export const db: NodePgDatabase<typeof schema> = drizzle(pool, {
   schema,
   logger: env.app.isDev,
@@ -45,7 +49,8 @@ export const connectDatabase = async (): Promise<void> => {
     } else {
       logger.error("Database connection failed:", error);
     }
-    process.exit(1);
+
+    throw error;
   }
 };
 
