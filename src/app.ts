@@ -25,6 +25,7 @@ export class App {
   private app: Application;
   private mailService: MailService;
   private rabbitmqService: RabbitMQService;
+  private ready?: Promise<void>;
 
   constructor() {
     this.app = express();
@@ -36,6 +37,8 @@ export class App {
       fallbackHandler: (payload) =>
         this.mailService.sendVerificationEmail(payload),
     });
+
+    this.initializeRoutes();
   }
 
   private initializeMiddlewares() {
@@ -79,9 +82,8 @@ export class App {
     });
   }
 
-  async start() {
-    const PORT = env.app.port;
-    try {
+  async bootstrap(): Promise<void> {
+    this.ready ??= (async () => {
       await connectDatabase();
 
       await checkpointer.setup();
@@ -89,8 +91,15 @@ export class App {
 
       await this.rabbitmqService.connect();
       await this.consumerSetup();
+    })();
 
-      this.initializeRoutes();
+    return this.ready;
+  }
+
+  async start() {
+    const PORT = env.app.port;
+    try {
+      await this.bootstrap();
 
       this.app.listen(PORT, "0.0.0.0", () =>
         logger.info(`Server listening on http://localhost:${PORT}`),
