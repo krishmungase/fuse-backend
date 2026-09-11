@@ -1,7 +1,7 @@
 import { Response } from "express";
+import { pipeUIMessageStreamToResponse } from "ai";
 
 import ApiError from "../../../utils/api-error";
-import { importAiSdk } from "../../../utils/esm-import";
 import ApiResponse from "../../../utils/api-response";
 import { CustomRequest } from "../../../types/common.types";
 import ERROR_MESSAGE from "../../../constants/error-message.constants";
@@ -96,8 +96,6 @@ class ChatController {
       model: selected,
       signal: controller.signal,
     });
-
-    const { pipeUIMessageStreamToResponse } = await importAiSdk();
 
     return pipeUIMessageStreamToResponse({ response: res, stream });
   }

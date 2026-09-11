@@ -13,5 +13,5 @@ export const toSafeUser = (user: User): SafeUser => {
 export const authCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: env.app.isProd,
-  sameSite: env.app.isProd ? "none" : "lax",
+  sameSite: "lax",
 };

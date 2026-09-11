@@ -1,10 +1,10 @@
 import { randomUUID } from "crypto";
 
 import { Logger } from "winston";
+import { createUIMessageStream } from "ai";
 import { HumanMessage } from "@langchain/core/messages";
 
 import ApiError from "../../../utils/api-error";
-import { importAiSdk } from "../../../utils/esm-import";
 import ERROR_MESSAGE from "../../../constants/error-message.constants";
 
 import { agent, checkpointer } from "../../workflow";
@@ -44,8 +44,6 @@ class ChatStreamService {
   }: IStreamTurnParams) {
     const chat = await this.resolveChat(chatId, userId);
     const history = chat ? await this.chatService.getMessages(chat.id) : [];
-
-    const { createUIMessageStream } = await importAiSdk();
 
     return createUIMessageStream({
       onError: (error) => {
